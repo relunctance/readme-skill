@@ -104,8 +104,74 @@ echo "$readmes" | while read -r rm; do
     check_single "$rm"
 done
 
-# 多语言变体同步检查
-main_readme=""
+# ============================================================
+# 表格校验：检测列数不一致
+# ============================================================
+check_tables() {
+    local file="$1"
+    local name=$(basename "$file")
+    local errors=0
+    local in_table=0
+    local prev_cols=0
+    local table_start=0
+    local linenum=0
+
+    while IFS= read -r line; do
+        linenum=$((linenum + 1))
+
+        # 判断是否表格行（以 | 开头和结尾）
+        is_row=$(echo "$line" | grep -cE '^\s*\|.*\|\s*$' || true)
+        if [ "$is_row" -eq 0 ]; then
+            in_table=0
+            continue
+        fi
+
+        # 跳过 markdown 表格分隔行 |---|---|
+        if echo "$line" | grep -qE '^\s*\|\s*[-:]+\s*\|'; then
+            continue
+        fi
+
+        # 跳过空行
+        stripped=$(echo "$line" | sed 's/^\s*|//' | sed 's/|\s*$//' | tr -d ' ')
+        [ -z "$stripped" ] && continue
+
+        # 计算列数
+        col_count=$(echo "$stripped" | awk -F'|' '{print NF}')
+
+        if [ "$in_table" -eq 0 ]; then
+            in_table=1
+            prev_cols=$col_count
+            table_start=$linenum
+        else
+            if [ "$col_count" -ne "$prev_cols" ] && [ "$col_count" -gt 0 ]; then
+                echo -e "${RED}❌ $name:$linenum — 列数不一致（期望 $prev_cols 列，实际 $col_count 列）${NC}"
+                echo "   行内容: ${line:0:100}"
+                errors=$((errors + 1))
+                prev_cols=$col_count
+            fi
+        fi
+    done < "$file"
+
+    return $errors
+}
+
+echo "--- 表格结构检查 ---"
+total_table_errors=0
+for rm in $readmes; do
+    check_tables "$rm" || total_table_errors=$((total_table_errors + $?))
+done
+if [ "$total_table_errors" -eq 0 ]; then
+    echo -e "${GREEN}✅ 所有表格结构正常${NC}"
+else
+    echo -e "${RED}❌ 共发现 $total_table_errors 个表格问题${NC}"
+fi
+echo ""
+
+# ============================================================
+# 徽章 + 章节检查
+# ============================================================
+
+# 多语言变体检测
 if [ -f "$PROJECT_DIR/README.md" ]; then
     main_readme="$PROJECT_DIR/README.md"
 elif [ -f "$PROJECT_DIR/readme.md" ]; then

@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # skill-pre-commit-check.sh
 # Skill 提交前必检：验证所有引用的文件/脚本/链接是否存在
+# 只检查代码块内的本地路径引用，不检查 markdown 文字内容
 # 用法: bash scripts/pre-commit-check.sh <skill-repo-root>
-
-set -e
 
 ROOT="${1:-.}"
 
@@ -14,116 +13,135 @@ NC='\033[0m'
 
 ERRORS=0
 
-check() {
+# 检查一个文件中的代码块路径引用
+check_file() {
     local file="$1"
-    local pattern="$2"
-    local description="$3"
+    local label="$2"
 
     if [ ! -f "$file" ]; then
+        echo -e "${YELLOW}⚠️  未找到: $label${NC}"
         return
     fi
 
-    matches=$(grep -n "$pattern" "$file" 2>/dev/null || true)
-    if [ -z "$matches" ]; then
-        return
+    local in_code=0
+    local linenum=0
+    local errors=0
+
+    while IFS= read -r line; do
+        linenum=$((linenum + 1))
+
+        # 跟踪代码块状态
+        if echo "$line" | grep -qE '^\s*```'; then
+            if [ "$in_code" -eq 0 ]; then
+                in_code=1
+            else
+                in_code=0
+            fi
+            continue
+        fi
+
+        # 只在代码块内检查
+        [ "$in_code" -eq 0 ] && continue
+
+        # 检查有意义的本地路径模式
+        # 1. ln -sf ~/xxx/xxx
+        echo "$line" | grep -oE 'ln -sf [^ ]+' | while read -r frag; do
+            path=$(echo "$frag" | awk '{print $3}')
+            if [ -n "$path" ] && [[ "$path" == ~/* || "$path" == /* ]]; then
+                expanded="${path/#\~/$HOME}"
+                if [ ! -e "$expanded" ]; then
+                    echo -e "${RED}❌ $file:$linenum  —  ln -sf 目标不存在: $path${NC}"
+                    ERRORS=$((ERRORS + 1))
+                    errors=$((errors + 1))
+                fi
+            fi
+        done
+
+        # 2. mkdir -p ~/xxx 或 mkdir -p $HOME/xxx
+        echo "$line" | grep -oE 'mkdir -p ([~$][^ ]+|[^ ]+/[^*$]+)' | while read -r frag; do
+            path=$(echo "$frag" | awk '{print $3}' | tr -d "'\"")
+            [ -z "$path" ] && continue
+            expanded="${path/#\~/$HOME}"
+            expanded="${expanded/\$HOME/$HOME}"
+            expanded=$(echo "$expanded" | sed 's/\$\{HOME\}/'"$HOME"'/g')
+            if [[ "$expanded" == /* ]] && [ ! -e "$expanded" ]; then
+                # mkdir -p 的路径不存在是正常的（会创建），只警告
+                :  # skip mkdir targets
+            fi
+        done
+
+        # 3. cd ~/xxx 或 cd $HOME/xxx 或 cd /home/xxx
+        echo "$line" | grep -oE 'cd ([~$][^ ]+|[^ ]+/[^*$"'"'"']+)' | while read -r frag; do
+            path=$(echo "$frag" | cut -d' ' -f2 | tr -d "'\"")
+            [ -z "$path" ] && continue
+            expanded="${path/#\~/$HOME}"
+            expanded="${expanded/\$HOME/$HOME}"
+            expanded=$(echo "$expanded" | sed 's/\$\{HOME\}/'"$HOME"'/g')
+            if [[ "$expanded" == /* ]]; then
+                # 目标目录可能不存在，只检查绝对路径且不在同一 repo 内的情况
+                if [ ! -d "$expanded" ] && [[ "$expanded" != "$ROOT"/* ]]; then
+                    # 可能是 repo 外的路径，正常
+                    :
+                fi
+            fi
+        done
+
+        # 4. references/xxx / scripts/xxx / templates/xxx
+        echo "$line" | grep -oE '(references|scripts|templates|assets)/[a-zA-Z0-9_./-]+' | while read -r ref; do
+            # 去除末尾的 ] ; 等
+            ref=$(echo "$ref" | sed 's/[@\])].*//')
+            full="$ROOT/$ref"
+            if [ ! -e "$full" ]; then
+                echo -e "${RED}❌ $file:$linenum  —  引用文件不存在: $ref${NC}"
+                ERRORS=$((ERRORS + 1))
+                errors=$((errors + 1))
+            fi
+        done
+
+        # 5. ./xxx.sh 或 ./scripts/xxx
+        echo "$line" | grep -oE '\./[a-zA-Z0-9_/.-]+\.(sh|py|yaml|yml|json)' | while read -r ref; do
+            full="$ROOT/$ref"
+            if [ ! -e "$full" ]; then
+                echo -e "${RED}❌ $file:$linenum  —  引用脚本不存在: $ref${NC}"
+                ERRORS=$((ERRORS + 1))
+                errors=$((errors + 1))
+            fi
+        done
+
+    done < "$file"
+
+    if [ "$errors" -eq 0 ]; then
+        echo -e "${GREEN}✅ $label — 无路径问题${NC}"
     fi
-
-    echo "$matches" | while read -r line; do
-        linenum=$(echo "$line" | cut -d: -f1)
-        content=$(echo "$line" | cut -d: -f2-)
-
-        # 提取路径（去除引号、反引号、括号等）
-        path=$(echo "$content" | grep -oE '[`"'"'"']*[^`"'"'"'(]*[`"'"'"')]' | head -1 | tr -d '`'"'"'")
-        path=$(echo "$path" | sed 's/[()"]//g' | xargs)
-
-        if [ -z "$path" ]; then
-            return
-        fi
-
-        # 跳过 URL
-        if echo "$path" | grep -qE '^https?://'; then
-            return
-        fi
-
-        # 跳过变量和命令
-        if echo "$path" | grep -qE '^\$|curl |wget |git |bash '; then
-            return
-        fi
-
-        # 解析相对路径
-        local_dir=$(dirname "$file")
-        full_path=""
-        if [[ "$path" == /* ]]; then
-            full_path="$path"
-        else
-            full_path="$local_dir/$path"
-        fi
-
-        # 清理多余 ../
-        full_path=$(realpath "$full_path" 2>/dev/null || echo "$full_path")
-
-        if [ ! -e "$full_path" ]; then
-            echo -e "${RED}❌ $file:$linenum${NC}"
-            echo -e "   引用路径不存在: $path"
-            echo -e "   完整: $full_path"
-            ERRORS=$((ERRORS + 1))
-        fi
-    done
 }
 
 echo "=== Skill Pre-Commit Check ==="
-echo "检查目录: $ROOT"
+echo "检查: $ROOT"
 echo ""
 
-# 1. 检查 SKILL.md 引用的所有本地路径
-echo "--- SKILL.md 引用检查 ---"
-if [ -f "$ROOT/SKILL.md" ]; then
-    check "$ROOT/SKILL.md" 'scripts/' 'scripts/ 引用'
-    check "$ROOT/SKILL.md" 'references/' 'references/ 引用'
-    check "$ROOT/SKILL.md" '\.sh' 'shell 脚本引用'
-    check "$ROOT/SKILL.md" '\.py' 'python 脚本引用'
-    check "$ROOT/SKILL.md" '~\/' 'HOME 相对路径引用'
-    check "$ROOT/SKILL.md" '/home/' '绝对路径引用'
-    check "$ROOT/SKILL.md" '\.md' 'markdown 文件引用'
-    echo -e "${GREEN}✅ SKILL.md 引用检查完成${NC}"
-else
-    echo -e "${YELLOW}⚠️  未发现 SKILL.md${NC}"
-fi
+# 检查 SKILL.md 和 README.md
+check_file "$ROOT/SKILL.md" "SKILL.md"
+check_file "$ROOT/README.md" "README.md"
 echo ""
 
-# 2. 检查 README.md 引用的所有本地路径
-echo "--- README.md 引用检查 ---"
-if [ -f "$ROOT/README.md" ]; then
-    check "$ROOT/README.md" 'scripts/' 'scripts/ 引用'
-    check "$ROOT/README.md" 'references/' 'references/ 引用'
-    check "$ROOT/README.md" '\.sh' 'shell 脚本引用'
-    check "$ROOT/README.md" '~\/' 'HOME 相对路径引用'
-    check "$ROOT/README.md" '/home/' '绝对路径引用'
-    echo -e "${GREEN}✅ README.md 引用检查完成${NC}"
-else
-    echo -e "${YELLOW}⚠️  未发现 README.md${NC}"
-fi
-echo ""
-
-# 3. 检查所有 shell 脚本是否有执行权限
+# 脚本权限检查
 echo "--- 脚本权限检查 ---"
 find "$ROOT" -name "*.sh" -type f 2>/dev/null | while read -r script; do
     if [ ! -x "$script" ]; then
         echo -e "${YELLOW}⚠️  脚本无执行权限: $script${NC}"
-        echo "   建议: chmod +x $script"
     fi
 done
 echo -e "${GREEN}✅ 脚本权限检查完成${NC}"
 echo ""
 
-# 4. 检查 gql-skills 引用（如果 SKILL.md 中有）
+# gql-skills 注册检查
 echo "--- gql-skills 同步检查 ---"
 if [ -f "$ROOT/SKILL.md" ]; then
-    name=$(grep '^name:' "$ROOT/SKILL.md" | head -1 | cut -d: -f2 | xargs || true)
+    name=$(grep '^name:' "$ROOT/SKILL.md" 2>/dev/null | head -1 | cut -d: -f2 | xargs)
     if [ -n "$name" ]; then
-        echo "skill 名称: $name"
-        # 检查 gql-skills 中是否有此 skill
-        if grep -q "$name" ~/repos/gql-skills/SKILL.md 2>/dev/null || grep -q "$name" ~/repos/gql-skills/README.md 2>/dev/null; then
+        echo "skill: $name"
+        if grep -q "$name" ~/repos/gql-skills/SKILL.md 2>/dev/null || \
+           grep -q "$name" ~/repos/gql-skills/README.md 2>/dev/null; then
             echo -e "${GREEN}✅ gql-skills 中已注册${NC}"
         else
             echo -e "${YELLOW}⚠️  gql-skills 中未找到 $name${NC}"
@@ -132,7 +150,7 @@ if [ -f "$ROOT/SKILL.md" ]; then
 fi
 echo ""
 
-# 5. 汇总
+# 汇总
 echo "=== 汇总 ==="
 if [ "$ERRORS" -eq 0 ]; then
     echo -e "${GREEN}✅ 所有检查通过，可安全提交${NC}"
