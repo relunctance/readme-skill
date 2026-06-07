@@ -5,6 +5,19 @@ version: "2.0.0"
 author: relunctance
 license: MIT
 category: productivity
+triggers:
+  - readme-skill
+  - 检查 README
+  - 美化 README
+  - 更新 README
+  - 同步多语言 README
+  - 生成 README
+  - check readme
+  - update readme
+  - beautify README
+  - sync README
+  - README 不完整
+  - README 缺少徽章
 tags:
   - readme
   - documentation
