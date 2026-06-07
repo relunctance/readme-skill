@@ -293,6 +293,10 @@ MIT
 
 违反此规则的教训：graphify 被写成 relunctance/graphify（应为 safishamsi/graphify），bdd-skill 被写成 bdd-skill-design（应为 bdd-skill）。
 
+## references/ 索引
+
+详见 [references/README.md](references/README.md)（5个文件：徽章规范/双语同步/emoji规范/frontmatter规范/同步规则）
+
 ## 安装
 
 ```bash
