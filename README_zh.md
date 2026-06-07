@@ -12,6 +12,7 @@ search: false
 [![version](https://img.shields.io/badge/version-2.0.0-green.svg)](#)
 [![platforms](https://img.shields.io/badge/platforms-Hermes%20Agent%20%7C%20Claude%20Code%20%7C%20OpenClaw-4B8FBA.svg)](#)
 [![category](https://img.shields.io/badge/category-Productivity-blue.svg)](#)
+[![stars](https://img.shields.io/github/stars/relunctance/readme-skill?style=flat&label=Stars)](https://github.com/relunctance/readme-skill/stargazers)
 
 *README 完整性检查与自动美化 — 检测并更新所有 README，与 SKILL.md 保持同步*
 

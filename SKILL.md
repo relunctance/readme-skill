@@ -61,6 +61,31 @@ metadata:
   └── 否 → 生成标准 README
 ```
 
+## BDD + TDD 开发流程（新增 Skill 或修改本 skill 时遵守）
+
+### 判断标准
+
+| 该用代码 | 该用 SOP/LLM |
+|----------|-------------|
+| 精确计算（版本 diff 百分比） | 决策判断（歧义、优先级） |
+| 文件 IO（确定性读写） | 文本处理/格式化 |
+| 幂等脚本（< 50 行） | 工作流编排 |
+
+### 执行顺序
+
+1. **先问**：能否用 SOP + LLM 解决？
+2. 如果不行，再问：最小化代码方案是什么？
+3. 最后才动手写代码
+4. 代码总量控制：单一改动 < 150 行新增代码
+
+### commit 时机规则
+
+| 场景 | 时机 |
+|------|------|
+| Step 验证通过 | 每步完成后立即 commit |
+| 发现新异常处理 | 立即记录到异常表，立即 commit |
+| 盲区探索 | 先查 gql-skills，确认为盲区后再 commit |
+
 ## Step 1：检测 README 存在性和变体
 
 ```bash
@@ -214,51 +239,6 @@ MIT
 > - 每个 `##` 章节都必须有图标，不能裸标题
 
 > **注意**：`---` frontmatter 放在 `# 标题` **之前**是正确的标准做法。README 顶行是 `---`，第二行是 `<div align="center">`，第三行是 `# 🛠️ 标题`，第五行是 `**[English](README.md) · [中文](README_zh.md)**`（中英互相引用）。
-[![category](https://img.shields.io/badge/category-devops-blue.svg)]
-
-## 触发条件
-
-当需要做某件事时使用。
-
-## 功能特性
-
-- 特性 1
-- 特性 2
-
-## 快速开始
-
-```bash
-hermes skills install https://github.com/relunctance/my-skill
-```
-
-## 安装
-
-```bash
-hermes skills install https://github.com/relunctance/my-skill
-```
-
-## 文件结构
-
-```
-my-skill/
-├── SKILL.md
-├── README.md
-└── scripts/
-```
-
-## 安装后验证
-
-- [ ] skill 加载成功
-- [ ] 触发词生效
-
-## 相关 Skills
-
-- [skill-created](https://github.com/relunctance/skill-created) — 创建新 skill
-
-## 许可证
-
-MIT
-```
 
 ## 与 SKILL.md 同步规则
 
@@ -272,13 +252,28 @@ MIT
 | `metadata.hermes.platforms` | shields platforms 徽章 |
 | `triggers` / description | 触发条件章节 |
 
-## 约束
+## ⚠️ 危险信号表
 
-1. **不删除已有内容** — 只补充，不覆盖已有有效内容
-2. **保持风格一致** — 多语言版本保持相同结构
-3. **徽章使用 shields.io** — 统一使用 shields.io 格式
-4. **与 SKILL.md 同步** — description / version / platforms 必须一致
-5. **不修改 LICENSE 文件** — 只更新文档，不动许可证
+🔴 **以下症状出现时，立即停止并诊断**：
+
+| 危险信号 | 症状 | 根因 | 正确做法 |
+|----------|------|------|----------|
+| 空白画布 | 生成的 README 无内容 | Step 1 `find` 未找到文件 | 确认 `$PROJECT_DIR` 路径正确 |
+| 徽章 404 | shields.io URL 返回 404 | shields.io 临时故障或 URL 错误 | 改用文字链接 `[MIT]`，保留占位注释 |
+| 双语不同步 | README.md ≠ README_zh.md 内容差异大 | 多语言变更未同步 | 仅同步主版本，标记冲突要求人工确认 |
+| frontmatter 污染 | README 出现 YAML frontmatter | 用户误将 SKILL.md frontmatter 复制到 README | README 顶行必须是 `---` 或 `<div>`，frontmatter 只在 SKILL.md 中 |
+| 章节裸标题 | `## 安装` 无 emoji | 未应用 emoji 规范 | 每个 `##` 必须有 emoji 图标 |
+| 版本不一致 | README version ≠ SKILL.md version | 多语言变更未同步 | 自动更新 README 版本，或提示检查 SKILL.md |
+
+## 禁止行为清单
+
+| 禁止 | 后果 | 正确做法 |
+|------|------|----------|
+| 修改 LICENSE 文件 | 法律风险 | 只更新文档，不动许可证 |
+| 覆盖已有有效内容 | 用户数据丢失 | 只补充缺失项，不删除已有内容 |
+| 使用非 shields.io 徽章 | 风格不一致 | 统一 shields.io 格式 |
+| README 顶行是 `# 标题`（无 frontmatter） | frontmatter 规范缺失 | 顶行必须是 `---`（search: false）|
+| README 无 emoji 图标 | 视觉混乱 | 每个 `##` 章节必须有 emoji |
 
 ## ⚠️ 引用外部 Skill 的强制校验规则
 
@@ -297,6 +292,10 @@ MIT
 - ❌ 写 `github.com/relunctance/xxx` 前不验证
 
 违反此规则的教训：graphify 被写成 relunctance/graphify（应为 safishamsi/graphify），bdd-skill 被写成 bdd-skill-design（应为 bdd-skill）。
+
+## references/ 索引
+
+详见 [references/README.md](references/README.md)（5个文件：徽章规范/双语同步/emoji规范/frontmatter规范/同步规则）
 
 ## 安装
 
