@@ -227,13 +227,28 @@ MIT
 | `metadata.hermes.platforms` | shields platforms 徽章 |
 | `triggers` / description | 触发条件章节 |
 
-## 约束
+## ⚠️ 危险信号表
 
-1. **不删除已有内容** — 只补充，不覆盖已有有效内容
-2. **保持风格一致** — 多语言版本保持相同结构
-3. **徽章使用 shields.io** — 统一使用 shields.io 格式
-4. **与 SKILL.md 同步** — description / version / platforms 必须一致
-5. **不修改 LICENSE 文件** — 只更新文档，不动许可证
+🔴 **以下症状出现时，立即停止并诊断**：
+
+| 危险信号 | 症状 | 根因 | 正确做法 |
+|----------|------|------|----------|
+| 空白画布 | 生成的 README 无内容 | Step 1 `find` 未找到文件 | 确认 `$PROJECT_DIR` 路径正确 |
+| 徽章 404 | shields.io URL 返回 404 | shields.io 临时故障或 URL 错误 | 改用文字链接 `[MIT]`，保留占位注释 |
+| 双语不同步 | README.md ≠ README_zh.md 内容差异大 | 多语言变更未同步 | 仅同步主版本，标记冲突要求人工确认 |
+| frontmatter 污染 | README 出现 YAML frontmatter | 用户误将 SKILL.md frontmatter 复制到 README | README 顶行必须是 `---` 或 `<div>`，frontmatter 只在 SKILL.md 中 |
+| 章节裸标题 | `## 安装` 无 emoji | 未应用 emoji 规范 | 每个 `##` 必须有 emoji 图标 |
+| 版本不一致 | README version ≠ SKILL.md version | 多语言变更未同步 | 自动更新 README 版本，或提示检查 SKILL.md |
+
+## 禁止行为清单
+
+| 禁止 | 后果 | 正确做法 |
+|------|------|----------|
+| 修改 LICENSE 文件 | 法律风险 | 只更新文档，不动许可证 |
+| 覆盖已有有效内容 | 用户数据丢失 | 只补充缺失项，不删除已有内容 |
+| 使用非 shields.io 徽章 | 风格不一致 | 统一 shields.io 格式 |
+| README 顶行是 `# 标题`（无 frontmatter） | frontmatter 规范缺失 | 顶行必须是 `---`（search: false）|
+| README 无 emoji 图标 | 视觉混乱 | 每个 `##` 章节必须有 emoji |
 
 ## ⚠️ 引用外部 Skill 的强制校验规则
 
