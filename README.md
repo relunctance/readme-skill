@@ -13,75 +13,83 @@ search: false
 [![platforms](https://img.shields.io/badge/platforms-Hermes%20Agent%20%7C%20Claude%20Code%20%7C%20OpenClaw-4B8FBA.svg)](#)
 [![category](https://img.shields.io/badge/category-Productivity-blue.svg)](#)
 
-*README 完整性检查与自动美化 — 检测并更新所有 README，与 SKILL.md 保持同步*
+*README Completeness Checking & Auto-Beautification — Detect and update all READMEs, stay in sync with SKILL.md*
 
 </div>
 
-## 🎯 触发条件
+## 🎯 Triggers
 
-- 需要检查项目是否有 README
-- 需要更新项目的 README
-- 需要同步多个 README 变体
-- 需要补全缺失的 README
-- 需要美化现有 README（添加徽章、格式化）
-- skill 创建/更新后检查 README
+- Check if a project has a README
+- Update a project's README
+- Sync multiple README variants
+- Complete missing READMEs
+- Beautify existing READMEs (add badges, formatting)
+- Check README after skill creation/update
 
-## ✨ 功能特性
+## ✨ Features
 
-- 自动检测项目中所有 README 变体（README.md / README_zh.md / README_en.md 等）
-- 完整性检查：徽章 + 章节 + emoji 图标规范
-- 与 SKILL.md 字段自动同步（version / license / platforms / category）
-- 双语支持：中英文 README 互相引用
-- shields.io 统一徽章格式
+- Auto-detect all README variants in a project (README.md / README_zh.md / README_en.md etc.)
+- Completeness check: badges + sections + emoji icon standards
+- Auto-sync with SKILL.md fields (version / license / platforms / category)
+- Bilingual support: English and Chinese READMEs cross-reference each other
+- shields.io unified badge format
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
 ```bash
-# 安装
+# Install
 hermes skills install https://github.com/relunctance/readme-skill
 
-# 美化现有 README
+# Beautify an existing README
 hermes skills run readme-skill --path ./README.md
 ```
 
-## 📦 安装
+## 📦 Installation
 
 ```bash
 # Hermes / OpenClaw
 hermes skills install https://github.com/relunctance/readme-skill
 ```
 
-## 📁 文件结构
+## 📁 File Structure
 
 ```
 readme-skill/
-├── SKILL.md              # Skill 定义（含完整 SOP）
-├── README.md             # 英文文档
-├── README_zh.md          # 中文文档
-├── LICENSE               # MIT 许可证
-└── references/           # 详细参考文档（可选）
+├── SKILL.md              # Skill definition (with full SOP)
+├── README.md             # English documentation
+├── README_zh.md          # Chinese documentation
+├── LICENSE               # MIT License
+└── references/           # Detailed reference docs (optional)
 ```
 
-## ✅ 安装后验证
+## ✅ Post-Installation Verification
 
-- [ ] `hermes skills list` 能看到 readme-skill
-- [ ] `hermes skills run readme-skill --help` 正常执行
+- [ ] `hermes skills list` shows readme-skill
+- [ ] `hermes skills run readme-skill --help` executes normally
 
-## 🔗 相关 Skills
+## 🔗 Related Skills
 
-- [skill-created](https://github.com/relunctance/skill-created) — 创建新 skill
-- [dir-skill](https://github.com/relunctance/dir-skill) — 目录结构标准化
+- [skill-created](https://github.com/relunctance/skill-created) — Create new skills
+- [dir-skill](https://github.com/relunctance/dir-skill) — Directory structure standardization
+- [evolve-skill](https://github.com/relunctance/evolve-skill) — Skill self-evolution engine
 
-## 🤝 欢迎贡献
+## 🤝 Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Contributions, issues and pull requests are welcome!
 
-1. Fork 本仓库
-2. 创建 Feature 分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+**Found a bug?**
+1. Submit an [Issue](https://github.com/relunctance/readme-skill/issues)
+2. Describe reproduction steps
+3. Attach error logs
 
-## 📜 许可证
+**Want to contribute code?**
+1. Fork this repository
+2. Create a Feature branch (`git checkout -b feature/AmazingFeature`)
+3. Write BDD comments + TDD tests
+4. Commit changes (`git commit -m 'Add AmazingFeature'`)
+5. Push to branch (`git push origin feature/AmazingFeature`)
+6. Create a Pull Request
 
-MIT — 详见 [LICENSE](LICENSE)
+## 📜 License
+
+MIT — see [LICENSE](LICENSE)
