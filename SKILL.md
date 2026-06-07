@@ -214,51 +214,6 @@ MIT
 > - 每个 `##` 章节都必须有图标，不能裸标题
 
 > **注意**：`---` frontmatter 放在 `# 标题` **之前**是正确的标准做法。README 顶行是 `---`，第二行是 `<div align="center">`，第三行是 `# 🛠️ 标题`，第五行是 `**[English](README.md) · [中文](README_zh.md)**`（中英互相引用）。
-[![category](https://img.shields.io/badge/category-devops-blue.svg)]
-
-## 触发条件
-
-当需要做某件事时使用。
-
-## 功能特性
-
-- 特性 1
-- 特性 2
-
-## 快速开始
-
-```bash
-hermes skills install https://github.com/relunctance/my-skill
-```
-
-## 安装
-
-```bash
-hermes skills install https://github.com/relunctance/my-skill
-```
-
-## 文件结构
-
-```
-my-skill/
-├── SKILL.md
-├── README.md
-└── scripts/
-```
-
-## 安装后验证
-
-- [ ] skill 加载成功
-- [ ] 触发词生效
-
-## 相关 Skills
-
-- [skill-created](https://github.com/relunctance/skill-created) — 创建新 skill
-
-## 许可证
-
-MIT
-```
 
 ## 与 SKILL.md 同步规则
 
