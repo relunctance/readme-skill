@@ -55,10 +55,46 @@ metadata:
 
 ## 核心流程
 
+```mermaid
+flowchart TD
+    A[🔴 CHECKPOINT: 用户要做什么？] --> B{项目有 README?}
+    B -- 是 --> C[Step 1: 检测变体 + 完整性评分]
+    B -- 否 --> D[Step 3: 生成标准 README]
+    C --> E{完整性 ≥ 80 分?}
+    E -- 是 --> F[🔴 STOP: 报告无需更新, 等用户确认]
+    E -- 否 --> G[Step 2: 列缺失项]
+    G --> H[Step 3: 补全/生成]
+    H --> I[Step 4: 同步多语言变体]
+    I --> J[🔴 CHECKPOINT: 用户审查 diff]
+    J -- 通过 --> K[✅ 提交 + push]
+    J -- 拒绝 --> L[回滚 + 重做]
+
+    style A fill:#ff6b6b,color:#fff
+    style F fill:#ffa94d,color:#fff
+    style J fill:#ff6b6b,color:#fff
+    style K fill:#51cf66,color:#fff
+    style L fill:#ffd43b,color:#2d2a3e
 ```
-项目有 README？
-  ├── 是 → 检查完整性（徽章 + 章节）→ 补充缺失项
-  └── 否 → 生成标准 README
+
+## 🔴 硬 STOP 门禁（执行前必读）
+
+> **以下 5 个动作出现时，agent 必须 STOP 输出并等待用户确认，禁止自作主张：**
+
+| 触发场景 | 错误做法 | 正确做法 |
+|---------|---------|---------|
+| 删除现有 README 章节 | 直接删 | 🔴 STOP：「检测到 [X] 章节，是否删除？」 |
+| 修改 LICENSE 内容 | 改 | 🔴 STOP + 永远禁止（禁止行为表 #1）|
+| 替换 emoji 标题为裸标题 | 改 | 🔴 STOP：「检测到破坏 emoji 规范，要继续吗？」|
+| 同步时检测到多语言差异 > 30% | 强制覆盖 | 🔴 STOP + 报告差异 + 等用户决定主版本 |
+| 写入文件失败 3 次 | 重试 | 🔴 STOP：「写入失败已 3 次，请检查权限/路径」|
+
+```
+┌────────────────────────────────────────────────────┐
+│  🛑 STOP gate rule:                                │
+│  发现上表 5 个场景之一 → 输出 🔴 STOP 消息         │
+│  → 写"等用户确认" → 不调下一步 tool                │
+│  → 禁止用"先做了再说"绕过                          │
+└────────────────────────────────────────────────────┘
 ```
 
 ## BDD + TDD 开发流程（新增 Skill 或修改本 skill 时遵守）

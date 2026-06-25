@@ -1,0 +1,3 @@
+cycle	timestamp	skill	dim1_frontmatter	dim2_workflow	dim3_failure_modes	dim4_checkpoints	dim5_specificity	dim6_resources	dim7_architecture	dim8_runtime	dry_run_pct	total	notes
+0	2026-06-25T17:57	readme-skill	9	8	10	8	9	10	8	7.0	100	83.7	baseline v2.0.0, dim8=dry_run (360 API timeout), 3 提示词写在 test-prompts.json, 危险信号表+禁止清单是亮点
+1	2026-06-25T18:05	readme-skill	9	9	10	10	9	10	8	7.0	100	86.1	+2.4 分: dim2 加 mermaid 流程图+色标+决策分支, dim4 加硬 STOP 门禁 5 场景+ASCII 规则框, 触顶 break

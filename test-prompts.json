@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "prompt": "帮我检查 /home/gql/repos/gql-skills 的 README.md 是否完整，缺什么",
+    "expected": "检测存在 → 列出缺失项（徽章/章节/中英对照/示例）→ 不修改直接报告"
+  },
+  {
+    "id": 2,
+    "prompt": "帮 /home/gql/repos/readme-skill 的 README.md 加徽章和章节, 让它更专业",
+    "expected": "检查现状 → 列补充项 → 写入新内容 → 保持中英双语 + emoji 标题"
+  },
+  {
+    "id": 3,
+    "prompt": "/home/gql/repos/skill-constraint-generator 只有英文 README，生成中文 README 并保持同步",
+    "expected": "检测 → 生成中文版 → 双向链接 → 中英 README 章节一一对应"
+  }
+]
